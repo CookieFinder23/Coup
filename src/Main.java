@@ -219,7 +219,7 @@ public class Main {
     }
 
     public static boolean resolveChallenge(Player challenger, Player challenged, Cards card) {
-        System.out.println(challenger + " challenged " + challenged + "'s claim of " + card + ".");
+        System.out.println(challenger + " challenges " + challenged + "'s claim of " + card + ".");
         Card chosenCard = challenged.resolveChallenge(card);
         if(chosenCard == null) {
             System.out.println(challenged + " lost the challenge.");
