@@ -14,4 +14,14 @@ public enum Cards {
             case Cards.CONTESSA -> "Contessa";
         };
     }
+
+    public Actions getAction() {
+        return switch(this) {
+            case Cards.DUKE -> Actions.TAX;
+            case Cards.ASSASSIN -> Actions.ASSASSINATE;
+            case Cards.CAPTAIN -> Actions.STEAL;
+            case Cards.AMBASSADOR -> Actions.EXCHANGE;
+            default -> throw new IllegalStateException("Unexpected value: " + this);
+        };
+    }
 }

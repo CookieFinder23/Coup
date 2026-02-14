@@ -20,8 +20,10 @@ public class Card {
     }
 
     public String toString() {
-        return name + ", " + zone;
+        return name.toString();
     }
+
+
 
 
 }

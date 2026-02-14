@@ -19,7 +19,7 @@ public class Main {
             players[i] = new Bot(namePlayer("Name opponent #" + i + ": ", minLength, maxLength), i);
 
         for (int i = 0; i < players.length; i++)
-            System.out.println((i + 1)+ ": " + players[i].getName());
+            System.out.println((i + 1)+ ": " + players[i]);
         currentTurn = askNumber("Which player should start?", 1, players.length + 1) - 1;
 
 
@@ -47,16 +47,21 @@ public class Main {
             do {
                 currentTurn++;
                 currentTurn = currentTurn % players.length;
-            } while (isPlayerAlive(players[currentTurn]));
+            } while (!isPlayerAlive(players[currentTurn]));
         }
 
-        System.out.println(players[currentTurn].getName() + " wins!");
+        System.out.println(players[currentTurn] + " wins!");
 
     }
 
     public static void drawCard(Player player) {
         Card[] cardsInDeck = getCardsInZone(Zones.getZone(GlobalZones.DECK));
-        cardsInDeck[(int) (Math.random() * cardsInDeck.length)].setZone(Zones.getZone(player));
+        Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
+        drawnCard.setZone(Zones.getZone(player));
+        if(player instanceof User)
+            System.out.println(player + " drew a " + drawnCard);
+        else
+            System.out.println(player + " drew a card");
     }
 
     public static String namePlayer(String message, int minLength, int maxLength) {
@@ -102,11 +107,32 @@ public class Main {
     }
 
     public static void printGamestate() {
-        for (Card card : cards)
-            System.out.println(card);
         for (Player player : players) {
-            System.out.println(player);
+            if (player instanceof Bot) {
+                if (isPlayerAlive(player)) {
+                    if(getCardsInZone(Zones.getZone(player)).length == 1)
+                        System.out.println(player + " has 1 card in their hand and " + player.getCoins() + " coins.");
+                    else
+                        System.out.println(player + " has 2 cards in their hand and " + player.getCoins() + " coins.");
+                }
+                    else
+                    System.out.println(player + " is out of the game");
+            } else {
+                System.out.println("Your hand is {" + listCardsInZone(Zones.getZone(player)) + "} and you have " + player.getCoins() + " coins.");
+            }
         }
+        System.out.println("This discard pile is {" + listCardsInZone(Zones.getZone(GlobalZones.DISCARD)) + "}");
+    }
+
+    public static String listCardsInZone(int zone) {
+        String output = "";
+        Card[] cardsInZone = getCardsInZone(zone);
+        for(int i = 0; i < cardsInZone.length; i++) {
+            output += cardsInZone[i];
+            if (i < cardsInZone.length - 1)
+                output += ", ";
+        }
+        return output;
     }
 
     public static Card[] getCardsInZone(int zone) {
@@ -129,13 +155,29 @@ public class Main {
     }
 
     public static boolean offerBlock(Player player, Actions action, Player target) {
-        for (int i = 1; i < players.length - 1; i++)
+        for (int i = 1; i < players.length; i++)
         {
             Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
             Cards chosenCard = blocker.wantsToBlock(player, action, target);
             if (chosenCard != null) {
-                if (player.wantsToChallenge(blocker, chosenCard, target)) {
-                    return resolveChallenge(player, blocker, chosenCard);
+                if (player.wantsToChallenge(blocker, chosenCard, target, true)) {
+                    return !resolveChallenge(player, blocker, chosenCard);
+                } else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean offerBlock(Player player, Actions action) {
+        for (int i = 1; i < players.length; i++)
+        {
+            Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
+            Cards chosenCard = blocker.wantsToBlock(player, action);
+            if (chosenCard != null) {
+                if (player.wantsToChallenge(blocker, chosenCard, true)) {
+                    return !resolveChallenge(player, blocker, chosenCard);
                 } else {
                     return true;
                 }
@@ -145,10 +187,21 @@ public class Main {
     }
 
     public static boolean offerChallenge(Player player, Cards card, Player target) {
-        for (int i = 1; i < players.length - 1; i++)
+        for (int i = 1; i < players.length; i++)
         {
             Player challenger = players[(i + player.getPositionInTurnOrder()) % players.length];
-            if (challenger.wantsToChallenge(player, card, target)) {
+            if (challenger.wantsToChallenge(player, card, target, false)) {
+                return resolveChallenge(challenger, player, card);
+            }
+        }
+        return false;
+    }
+
+    public static boolean offerChallenge(Player player, Cards card) {
+        for (int i = 1; i < players.length; i++)
+        {
+            Player challenger = players[(i + player.getPositionInTurnOrder()) % players.length];
+            if (challenger.wantsToChallenge(player, card, false)) {
                 return resolveChallenge(challenger, player, card);
             }
         }
@@ -156,17 +209,22 @@ public class Main {
     }
 
     public static boolean resolveChallenge(Player challenger, Player challenged, Cards card) {
-        System.out.println(challenger.getName() + " challenged " + challenged.getName() + "'s claim of " + card + ".");
-        Card chosenCard = challenger.resolveChallenge(card);
+        System.out.println(challenger + " challenged " + challenged + "'s claim of " + card + ".");
+        Card chosenCard = challenged.resolveChallenge(card);
         if(chosenCard == null) {
-            System.out.println(challenged.getName() + " lost the challenge.");
+            System.out.println(challenged + " lost the challenge.");
             challenged.discard();
             return true;
         } else {
-            System.out.println(challenged.getName() + " reveals a " + card + " and shuffles it back into the deck, winning the challenge.");
-            challenger.discard();
+            System.out.println(challenged + " reveals a " + card + " and shuffles it back into the deck, winning the challenge.");
             chosenCard.setZone(Zones.getZone(GlobalZones.DECK));
+            drawCard(challenged);
+            challenger.discard();
             return false;
         }
+    }
+
+    public static Player[] getPlayers() {
+        return players;
     }
 }

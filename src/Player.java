@@ -22,9 +22,7 @@ public abstract class Player {
     }
 
     public String toString() {
-       return "Name: " + name + "\n"
-               + "Coins: " + coins + "\n"
-               + "Position in turn order: " + positionInTurnOrder;
+       return name;
     }
 
     public String getName() {
@@ -57,37 +55,70 @@ public abstract class Player {
         }
     }
 
+    public void attemptingToUseAction(Actions action) {
+        System.out.println(this + " is attempting to use " + action);
+    }
+
+    public void successfulUseOfAction(Actions action) {
+        System.out.println(this + " used " + action);
+    }
+
+    public void attemptingToUseAction(Actions action, Player target) {
+        System.out.println(this + " is attempting to use " + action + " on " + target);
+    }
+
+    public void successfulUseOfAction(Actions action, Player target) {
+        System.out.println(this + " used " + action + " on " + target);
+    }
+
     public void income() {
         coins++;
+        successfulUseOfAction(Actions.INCOME);
     }
 
     public void foreign_aid() {
-        if(!Main.offerBlock(this, Actions.FOREIGN_AID, null))
+        attemptingToUseAction(Actions.FOREIGN_AID);
+        if(!Main.offerBlock(this, Actions.FOREIGN_AID)) {
+            successfulUseOfAction(Actions.FOREIGN_AID);
             coins += 2;
+
+        }
+
     }
 
     public void coup() {
+
         coins -= 7;
-        pickTarget().discard();
+        Player target = pickTarget();
+        successfulUseOfAction(Actions.COUP, target);
+        target.discard();
     }
 
     public void tax() {
-        if(!Main.offerChallenge(this, Cards.DUKE, null))
+        attemptingToUseAction(Actions.TAX);
+        if(!Main.offerChallenge(this, Cards.DUKE)) {
+            successfulUseOfAction(Actions.TAX);
             coins += 3;
+        }
     }
 
     public void assassinate() {
         coins -= 3;
         Player target = pickTarget();
+        attemptingToUseAction(Actions.ASSASSINATE, target);
         if (!Main.offerChallenge(this, Cards.ASSASSIN, target))
         {
-            if (!Main.offerBlock(this, Actions.ASSASSINATE, target))
+            if (!Main.offerBlock(this, Actions.ASSASSINATE, target)) {
+                successfulUseOfAction(Actions.ASSASSINATE, target);
                 target.discard();
+            }
         }
     }
 
     public void exchange() {
-        if (!Main.offerChallenge(this, Cards.AMBASSADOR, null)) {
+        attemptingToUseAction(Actions.EXCHANGE);
+        if (!Main.offerChallenge(this, Cards.AMBASSADOR)) {
+            successfulUseOfAction(Actions.EXCHANGE);
             Main.drawCard(this);
             Main.drawCard(this);
             pickExchange().setZone(Zones.getZone(GlobalZones.DECK));
@@ -97,8 +128,10 @@ public abstract class Player {
 
     public void steal() {
         Player target = pickTarget();
+        attemptingToUseAction(Actions.STEAL, target);
         if (!Main.offerChallenge(this, Cards.CAPTAIN, target)) {
             if (!Main.offerBlock(this, Actions.STEAL, target)) {
+                successfulUseOfAction(Actions.STEAL, target);
                 int stolenCoins = Math.min(2, target.getCoins());
                 target.setCoins(target.getCoins() - stolenCoins);
                 coins += stolenCoins;
@@ -109,8 +142,10 @@ public abstract class Player {
     public abstract Card pickExchange();
     public abstract Player pickTarget();
     public abstract Actions pickTurnAction();
-    public abstract boolean wantsToChallenge(Player player, Cards card, Player target);
+    public abstract boolean wantsToChallenge(Player player, Cards card, Player target, boolean block);
+    public abstract boolean wantsToChallenge(Player player, Cards card, boolean block);
     public abstract Cards wantsToBlock(Player player, Actions action, Player target);
+    public abstract Cards wantsToBlock(Player player, Actions action);
     public abstract Card resolveChallenge(Cards card);
     public abstract void discard();
 }
