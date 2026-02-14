@@ -28,15 +28,13 @@ public class Bot extends Player{
 
         int[] weightedActions = new int[Actions.values().length];
 
-
-
         /*
         ACTION WEIGHT ALGORITHM
         1.  Each Action has a default value of 1
         2.  Actions you cannot afford are set to zero and cannot be changed
         3.  If bluffing, subtract fear of challenge penalty for each copy of the card in discard, and for each time the card was played by an
             alive player last turn
-        4.  Actions which require bluffing a card with three copies in discord are set to zero and cannot be changed
+        4.  Actions which require bluffing a card with three copies in discard are set to zero and cannot be changed
         5.  Add each Action's net coin value (Ambassador = 2) (Add lose influence bonus if applicable)
         6.  If you have the card required to use the action, add honesty bonus
         7.  Subtract fear of block penalty for each copy of a blocking card not seen. If a player has claimed a blocking card, then subtract
