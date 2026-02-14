@@ -46,7 +46,14 @@ public class Bot extends Player{
     }
 
     public Player pickTarget() {
-        return Main.getPlayers()[(getPositionInTurnOrder() + 1) % Main.getPlayers().length];
+        int indexOfTarget = getPositionInTurnOrder() + 1;
+        Player target;
+        do {
+            indexOfTarget++;
+            indexOfTarget = indexOfTarget %  Main.getPlayers().length;
+            target = Main.getPlayers()[indexOfTarget];
+        } while (!Main.isPlayerAlive(target) || target == this);
+        return target;
     }
 
     public Card pickExchange() {
@@ -66,7 +73,6 @@ public class Bot extends Player{
 
     public boolean wantsToChallenge(Player player, Cards card, boolean block) {
         if (Math.random() < 0.1) {
-            System.out.println(this + " challenges " + player + "'s claim of " + card);
             return true;
         } else {
             System.out.println(this + " declines to challenge " + player + "'s claim of " + card);

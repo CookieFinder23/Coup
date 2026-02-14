@@ -3,7 +3,7 @@ public class Main {
     private static Scanner keyboard;
     private static Card[] cards;
     private static Player[] players;
-    private static int currentTurn;
+
     public static void main(String[] args) {
 
         // GAME RULES
@@ -20,7 +20,7 @@ public class Main {
 
         for (int i = 0; i < players.length; i++)
             System.out.println((i + 1)+ ": " + players[i]);
-        currentTurn = askNumber("Which player should start?", 1, players.length + 1) - 1;
+        int currentTurn = askNumber("Which player should start?", 1, players.length + 1) - 1;
 
 
         // SETUP DECK
@@ -158,8 +158,11 @@ public class Main {
         for (int i = 1; i < players.length; i++)
         {
             Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
+            if (!isPlayerAlive(blocker))
+                continue;
             Cards chosenCard = blocker.wantsToBlock(player, action, target);
             if (chosenCard != null) {
+                System.out.println(blocker + " blocks " + player + "'s " + action + " with their " + chosenCard);
                 if (player.wantsToChallenge(blocker, chosenCard, target, true)) {
                     return !resolveChallenge(player, blocker, chosenCard);
                 } else {
@@ -174,8 +177,11 @@ public class Main {
         for (int i = 1; i < players.length; i++)
         {
             Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
+            if (!isPlayerAlive(blocker))
+                continue;
             Cards chosenCard = blocker.wantsToBlock(player, action);
             if (chosenCard != null) {
+                System.out.println(blocker + " blocks " + player + "'s " + action + " with their " + chosenCard);
                 if (player.wantsToChallenge(blocker, chosenCard, true)) {
                     return !resolveChallenge(player, blocker, chosenCard);
                 } else {
@@ -190,6 +196,8 @@ public class Main {
         for (int i = 1; i < players.length; i++)
         {
             Player challenger = players[(i + player.getPositionInTurnOrder()) % players.length];
+            if (!isPlayerAlive(challenger))
+                continue;
             if (challenger.wantsToChallenge(player, card, target, false)) {
                 return resolveChallenge(challenger, player, card);
             }
@@ -201,6 +209,8 @@ public class Main {
         for (int i = 1; i < players.length; i++)
         {
             Player challenger = players[(i + player.getPositionInTurnOrder()) % players.length];
+            if (!isPlayerAlive(challenger))
+                continue;
             if (challenger.wantsToChallenge(player, card, false)) {
                 return resolveChallenge(challenger, player, card);
             }
@@ -216,7 +226,7 @@ public class Main {
             challenged.discard();
             return true;
         } else {
-            System.out.println(challenged + " reveals a " + card + " and shuffles it back into the deck, winning the challenge.");
+            System.out.println(challenged + " reveals their " + card + " and shuffles it back into the deck, winning the challenge.");
             chosenCard.setZone(Zones.getZone(GlobalZones.DECK));
             drawCard(challenged);
             challenger.discard();
