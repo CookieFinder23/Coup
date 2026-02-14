@@ -2,11 +2,13 @@ public abstract class Player {
     private int coins;
     private final int positionInTurnOrder;
     private final String name;
+    private int turnNumber;
 
     public Player(String name, int positionInTurnOrder) {
         this.coins = 2;
         this.positionInTurnOrder = positionInTurnOrder;
         this.name = name;
+        this.turnNumber = 0;
     }
 
     public int getPositionInTurnOrder() {
@@ -29,7 +31,13 @@ public abstract class Player {
         return name;
     }
 
+    public int getTurnNumber() {
+        return turnNumber;
+    }
+
     public void takeTurn() {
+        turnNumber++;
+        System.out.println("\nTURN #" + turnNumber + " OF " + this + ":");
         switch(pickTurnAction()){
             case Actions.INCOME:
                 income();
@@ -89,7 +97,7 @@ public abstract class Player {
     public void coup() {
 
         coins -= 7;
-        Player target = pickTarget();
+        Player target = pickTarget(Actions.COUP);
         successfulUseOfAction(Actions.COUP, target);
         target.discard();
     }
@@ -104,7 +112,7 @@ public abstract class Player {
 
     public void assassinate() {
         coins -= 3;
-        Player target = pickTarget();
+        Player target = pickTarget(Actions.ASSASSINATE);
         attemptingToUseAction(Actions.ASSASSINATE, target);
         if (!Main.offerChallenge(this, Cards.ASSASSIN, target))
         {
@@ -119,15 +127,15 @@ public abstract class Player {
         attemptingToUseAction(Actions.EXCHANGE);
         if (!Main.offerChallenge(this, Cards.AMBASSADOR)) {
             successfulUseOfAction(Actions.EXCHANGE);
-            Main.drawCard(this);
-            Main.drawCard(this);
+            drawCard();
+            drawCard();
             pickExchange().setZone(Zones.getZone(GlobalZones.DECK));
             pickExchange().setZone(Zones.getZone(GlobalZones.DECK));
         }
     }
 
     public void steal() {
-        Player target = pickTarget();
+        Player target = pickTarget(Actions.STEAL);
         attemptingToUseAction(Actions.STEAL, target);
         if (!Main.offerChallenge(this, Cards.CAPTAIN, target)) {
             if (!Main.offerBlock(this, Actions.STEAL, target)) {
@@ -139,8 +147,11 @@ public abstract class Player {
         }
     }
 
+
+
+    public abstract void drawCard();
     public abstract Card pickExchange();
-    public abstract Player pickTarget();
+    public abstract Player pickTarget(Actions action);
     public abstract Actions pickTurnAction();
     public abstract boolean wantsToChallenge(Player player, Cards card, Player target, boolean block);
     public abstract boolean wantsToChallenge(Player player, Cards card, boolean block);

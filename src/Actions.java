@@ -18,4 +18,14 @@ public enum Actions {
             case Actions.STEAL -> "Steal";
         };
     }
+
+    public Cards getCard() {
+        return switch(this) {
+            case Actions.TAX -> Cards.DUKE;
+            case Actions.ASSASSINATE -> Cards.ASSASSIN;
+            case Actions.EXCHANGE -> Cards.AMBASSADOR;
+            case Actions.STEAL -> Cards.CAPTAIN;
+            default -> null;
+        };
+    }
 }

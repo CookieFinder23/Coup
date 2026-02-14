@@ -22,7 +22,7 @@ public class User extends Player{
         return action;
     }
 
-    public Player pickTarget() {
+    public Player pickTarget(Actions action) {
         int amountOfchoices = 0;
         for(Player player : Main.getPlayers()) {
             if (Main.isPlayerAlive(player) && player != this)
@@ -41,7 +41,7 @@ public class User extends Player{
     }
 
     public Card[] listCardsInHand() {
-        Card[] hand = Main.getCardsInZone(Zones.getZone(this));
+        Card[] hand = Main.getCardsInZone(this);
         for(int i = 0; i < hand.length; i++)
             System.out.println((i + 1) + ": " + hand[i]);
         return hand;
@@ -58,7 +58,7 @@ public class User extends Player{
             return pickOption("Given that " + player + " is attempting to use " + card
                     + " to block an action, would you like to challenge their claim of " + card + "?\n1: Yes\n2: No", 2) == 1;
         } else {
-            return pickOption("Given that " + player + " attempting to use " + card.getAction() + " on " + target
+            return pickOption("Given that " + player + " is attempting to use " + card.getAction() + " on " + target
                     + ", would you like to challenge their claim of " + card + "?\n1: Yes\n2: No", 2) == 1;
         }
     }
@@ -78,16 +78,7 @@ public class User extends Player{
                 + ", would you like to block their action?\n1: Yes\n2: No", 2) == 2) {
             return null;
         }
-        switch(action) {
-            case Actions.FOREIGN_AID: return Cards.DUKE;
-            case Actions.ASSASSINATE: return Cards.CONTESSA;
-            case Actions.STEAL:
-                if (pickOption("Which card do you want to claim to block Steal with?\n1: Captain\n2: Ambassador", 2) == 1)
-                    return Cards.CAPTAIN;
-                else
-                    return Cards.AMBASSADOR;
-            default: throw new IllegalStateException("Unexpected value: " + this);
-        }
+        return Cards.DUKE;
     }
 
     public Cards wantsToBlock(Player player, Actions action, Player target) {
@@ -124,6 +115,8 @@ public class User extends Player{
     public void discard() {
         Card[] hand = listCardsInHand();
         hand[pickOption("What card would you like to discard?", hand.length) - 1].setZone(Zones.getZone(GlobalZones.DISCARD));
+        if(!Main.isPlayerAlive(this))
+            System.out.println("You are out of the game!");
     }
 
     public static int pickOption(String message, int max)
@@ -148,6 +141,12 @@ public class User extends Player{
         }
     }
 
+    public void drawCard() {
+        Card[] cardsInDeck = Main.getCardsInZone(GlobalZones.DECK);
+        Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
+        drawnCard.setZone(Zones.getZone(this));
+        System.out.println("You drew a " + drawnCard);
+    }
 
     /*
     public abstract Card pickExchange();

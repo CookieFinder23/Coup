@@ -3,6 +3,7 @@ public class Main {
     private static Scanner keyboard;
     private static Card[] cards;
     private static Player[] players;
+    private final static int delay = 1000;
 
     public static void main(String[] args) {
 
@@ -35,8 +36,8 @@ public class Main {
 
         // DRAW STARTING CARDS
         for (Player player : players) {
-            drawCard(player);
-            drawCard(player);
+            player.drawCard();
+            player.drawCard();
         }
 
         // TURNS (if the game goes from more than one alive player to no alive players in one turn, this would break)
@@ -52,16 +53,6 @@ public class Main {
 
         System.out.println(players[currentTurn] + " wins!");
 
-    }
-
-    public static void drawCard(Player player) {
-        Card[] cardsInDeck = getCardsInZone(Zones.getZone(GlobalZones.DECK));
-        Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
-        drawnCard.setZone(Zones.getZone(player));
-        if(player instanceof User)
-            System.out.println(player + " drew a " + drawnCard);
-        else
-            System.out.println(player + " drew a card");
     }
 
     public static String namePlayer(String message, int minLength, int maxLength) {
@@ -85,7 +76,7 @@ public class Main {
     }
 
     public static boolean isPlayerAlive(Player player) {
-        return getCardsInZone(Zones.getZone(player)).length > 0;
+        return getCardsInZone(player).length > 0;
     }
 
     public static int askNumber(String message, int min, int max)
@@ -110,7 +101,7 @@ public class Main {
         for (Player player : players) {
             if (player instanceof Bot) {
                 if (isPlayerAlive(player)) {
-                    if(getCardsInZone(Zones.getZone(player)).length == 1)
+                    if(getCardsInZone(player).length == 1)
                         System.out.println(player + " has 1 card in their hand and " + player.getCoins() + " coins.");
                     else
                         System.out.println(player + " has 2 cards in their hand and " + player.getCoins() + " coins.");
@@ -135,7 +126,19 @@ public class Main {
         return output;
     }
 
+    public static Card[] getCardsInZone(GlobalZones zone) {
+        return findCardsWithInt(Zones.getZone(zone));
+    }
+
+    public static Card[] getCardsInZone(Player zone) {
+        return findCardsWithInt(Zones.getZone(zone));
+    }
+
     public static Card[] getCardsInZone(int zone) {
+        return findCardsWithInt(zone);
+    }
+
+    public static Card[] findCardsWithInt(int zone) {
         int amountOfCards = 0;
         for(Card value : cards) {
             if(value.getZone() == zone)
@@ -155,6 +158,8 @@ public class Main {
     }
 
     public static boolean offerBlock(Player player, Actions action, Player target) {
+        if(!isPlayerAlive(target)) return false;
+        System.out.println("\nOffering blocks for " + player + "'s " + action + " targeting " + target + ":");
         for (int i = 1; i < players.length; i++)
         {
             Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
@@ -174,11 +179,14 @@ public class Main {
     }
 
     public static boolean offerBlock(Player player, Actions action) {
+        System.out.println("\nOffering blocks for " + player + "'s " + action + ":");
         for (int i = 1; i < players.length; i++)
         {
             Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
-            if (!isPlayerAlive(blocker))
+            if (!isPlayerAlive(blocker)) {
+                System.out.println(blocker + " is dead");
                 continue;
+            }
             Cards chosenCard = blocker.wantsToBlock(player, action);
             if (chosenCard != null) {
                 System.out.println(blocker + " blocks " + player + "'s " + action + " with their " + chosenCard);
@@ -193,6 +201,7 @@ public class Main {
     }
 
     public static boolean offerChallenge(Player player, Cards card, Player target) {
+        System.out.println("\nOffering challenges for " + player + "'s claim of " + card + " using " + card.getAction() + " targeting " + target + ":");
         for (int i = 1; i < players.length; i++)
         {
             Player challenger = players[(i + player.getPositionInTurnOrder()) % players.length];
@@ -206,6 +215,7 @@ public class Main {
     }
 
     public static boolean offerChallenge(Player player, Cards card) {
+        System.out.println("\nOffering challenges for " + player + "'s claim of " + card + " using " + card.getAction() + ":");
         for (int i = 1; i < players.length; i++)
         {
             Player challenger = players[(i + player.getPositionInTurnOrder()) % players.length];
@@ -228,7 +238,7 @@ public class Main {
         } else {
             System.out.println(challenged + " reveals their " + card + " and shuffles it back into the deck, winning the challenge.");
             chosenCard.setZone(Zones.getZone(GlobalZones.DECK));
-            drawCard(challenged);
+            challenged.drawCard();
             challenger.discard();
             return false;
         }
