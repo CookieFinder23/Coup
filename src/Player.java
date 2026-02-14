@@ -3,12 +3,21 @@ public abstract class Player {
     private final int positionInTurnOrder;
     private final String name;
     private int turnNumber;
+    private Cards lastPlayedCard;
 
     public Player(String name, int positionInTurnOrder) {
         this.coins = 2;
         this.positionInTurnOrder = positionInTurnOrder;
         this.name = name;
         this.turnNumber = 0;
+    }
+
+    public void setLastPlayedCard(Cards card) {
+        lastPlayedCard = card;
+    }
+
+    public Cards getLastPlayedCard() {
+        return lastPlayedCard;
     }
 
     public int getPositionInTurnOrder() {

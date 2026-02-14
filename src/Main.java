@@ -3,10 +3,8 @@ public class Main {
     private static Scanner keyboard;
     private static Card[] cards;
     private static Player[] players;
-    private final static int delay = 1000;
 
     public static void main(String[] args) {
-
         // GAME RULES
         keyboard = new Scanner(System.in);
         int numberOfOpponents = askNumber("How many opponents (1-5)?", 1, 5);
@@ -20,10 +18,8 @@ public class Main {
             players[i] = new Bot(namePlayer("Name opponent #" + i + ": ", minLength, maxLength), i);
 
         for (int i = 0; i < players.length; i++)
-            System.out.println((i + 1)+ ": " + players[i]);
+            System.out.println((i + 1) + ": " + players[i]);
         int currentTurn = askNumber("Which player should start?", 1, players.length + 1) - 1;
-
-
         // SETUP DECK
         cards = new Card[15];
         for (int i = 0; i < 15; i += 5) {
@@ -41,10 +37,8 @@ public class Main {
         }
 
         // TURNS (if the game goes from more than one alive player to no alive players in one turn, this would break)
-        int lastTurn = -1;
-        while(lastTurn != currentTurn) {
+        while(!isGameOver()) {
             players[currentTurn].takeTurn();
-            lastTurn = currentTurn;
             do {
                 currentTurn++;
                 currentTurn = currentTurn % players.length;
@@ -52,7 +46,15 @@ public class Main {
         }
 
         System.out.println(players[currentTurn] + " wins!");
+    }
 
+    public static boolean isGameOver() {
+        int alivePlayers = 0;
+        for (Player player : players) {
+            if (isPlayerAlive(player))
+                alivePlayers++;
+        }
+        return alivePlayers == 1;
     }
 
     public static String namePlayer(String message, int minLength, int maxLength) {
@@ -184,7 +186,6 @@ public class Main {
         {
             Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
             if (!isPlayerAlive(blocker)) {
-                System.out.println(blocker + " is dead");
                 continue;
             }
             Cards chosenCard = blocker.wantsToBlock(player, action);
@@ -211,6 +212,7 @@ public class Main {
                 return resolveChallenge(challenger, player, card);
             }
         }
+        player.setLastPlayedCard(card);
         return false;
     }
 
@@ -225,6 +227,7 @@ public class Main {
                 return resolveChallenge(challenger, player, card);
             }
         }
+        player.setLastPlayedCard(card);
         return false;
     }
 

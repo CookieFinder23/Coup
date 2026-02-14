@@ -1,15 +1,24 @@
+import javax.accessibility.AccessibleIcon;
+import javax.annotation.processing.SupportedSourceVersion;
+
 public class Bot extends Player{
 
-    private static Cards bluff;
+    private Cards bluff;
+    private Actions lastAction;
+    private boolean lastActionSucceeded;
     public Bot(String name, int positionInTurnOrder) {
         super(name, positionInTurnOrder);
+        lastAction = Actions.INCOME;
+        lastActionSucceeded = true;
     }
 
     public void generateBluffCard() {
         int indexOfCard;
+        int maxIterations = 100; // challenge: guess why the code has a miniscule chance to indefinitely hang without this
         do {
             indexOfCard = (int) (Math.random() * 5);
-        } while(handContainsCard(Cards.values()[indexOfCard]));
+            maxIterations--;
+        } while(handContainsCard(Cards.values()[indexOfCard]) && maxIterations > 0);
         bluff = Cards.values()[indexOfCard];
     }
 
@@ -25,14 +34,18 @@ public class Bot extends Player{
         ACTION WEIGHT ALGORITHM
         1.  Each Action has a default value of 1
         2.  Actions you cannot afford are set to zero and cannot be changed
-        3.  If bluffing, subtract fear of challenge penalty for each copy of the card in discard
+        3.  If bluffing, subtract fear of challenge penalty for each copy of the card in discard, and for each time the card was played by an
+            alive player last turn
         4.  Actions which require bluffing a card with three copies in discord are set to zero and cannot be changed
         5.  Add each Action's net coin value (Ambassador = 2) (Add lose influence bonus if applicable)
         6.  If you have the card required to use the action, add honesty bonus
-        7.  Subtract fear of block penalty for each copy of a blocking card not seen
+        7.  Subtract fear of block penalty for each copy of a blocking card not seen. If a player has claimed a blocking card, then subtract
+            five times the fear of blocking penalty instead.
         8.  Subtract better option penalty for strictly better abilities of cards you have
-        9.  Set all Action weightages below 1 to 1
-        10. Whenever a bot draws a card, there is a 1/3 chance that they start bluffing a card they don't have. When picking
+        9.  If the bot tried and failed to do an action last turn, subtract the repetition penalty to that action
+        10. Multiply all action weightages by the consistency multiplier value
+        11. Set all Action weightages below 1 to 1
+        12. Whenever a bot draws a card, there is a 20% chance that they start bluffing a card they don't have. When picking
             an action, the bot acts as though the bluff card is in their hand. Whenever the bot discards a card, they
             stop bluffing.
          */
@@ -42,13 +55,15 @@ public class Bot extends Player{
         final int fearOfBlockPenalty = 1;
         final int fearOfChallengePenalty = 1;
         final int betterOptionPenalty = 3;
+        final int repetitionPenalty = 5;
+        final int consistencyMultiplier = 2;
         for(int i = 0; i < weightedActions.length; i++) {
             if (Actions.values()[i].getCard() != null) {
                 Cards bluffingCard = Actions.values()[i].getCard();
                 if (!handContainsCard(bluffingCard)) {
                     int amountOfCopiesInDiscard = copiesOfCardSeen(bluffingCard);
                     if (amountOfCopiesInDiscard == 3) continue;
-                    weightedActions[i] -= amountOfCopiesInDiscard * fearOfChallengePenalty;
+                    weightedActions[i] -= (amountOfCopiesInDiscard + howManyTimesHasCardBeenPlayedRecently(bluffingCard))* fearOfChallengePenalty;
                 }
             }
             weightedActions[i]++;
@@ -59,7 +74,7 @@ public class Bot extends Player{
                     break;
                 case Actions.FOREIGN_AID:
                     weightedActions[i] += 2;
-                    weightedActions[i] -= (3 - copiesOfCardSeen(Cards.DUKE)) * fearOfBlockPenalty;
+                    weightedActions[i] -=  calculateFearOfBlockingPenalty(Cards.DUKE, fearOfBlockPenalty);
                     if (handContainsCard(Cards.DUKE)) weightedActions[i] -= betterOptionPenalty;
                     break;
                 case Actions.COUP:
@@ -81,7 +96,7 @@ public class Bot extends Player{
                     }
                     weightedActions[i] += loseInfluenceBonus + 4;
                     if (handContainsCard(Cards.ASSASSIN)) weightedActions[i] += honestyBonus;
-                    weightedActions[i] -= (3 - copiesOfCardSeen(Cards.CONTESSA)) * fearOfBlockPenalty;
+                    weightedActions[i] -=  calculateFearOfBlockingPenalty(Cards.CONTESSA, fearOfBlockPenalty);
                     break;
                 case Actions.EXCHANGE:
                     weightedActions[i] += 2;
@@ -90,10 +105,13 @@ public class Bot extends Player{
                 case Actions.STEAL:
                     weightedActions[i] += 4;
                     if (handContainsCard(Cards.CAPTAIN)) weightedActions[i] += honestyBonus;
-                    weightedActions[i] -= (3 - copiesOfCardSeen(Cards.CAPTAIN)) * fearOfBlockPenalty;
-                    weightedActions[i] -= (3 - copiesOfCardSeen(Cards.AMBASSADOR)) * fearOfBlockPenalty;
+                    weightedActions[i] -= calculateFearOfBlockingPenalty(Cards.CAPTAIN, fearOfBlockPenalty);
+                    weightedActions[i] -= calculateFearOfBlockingPenalty(Cards.AMBASSADOR, fearOfBlockPenalty);
                     break;
             }
+            if(Actions.values()[i] == lastAction && !lastActionSucceeded)
+                weightedActions[i] -= repetitionPenalty;
+            weightedActions[i] *= consistencyMultiplier;
             weightedActions[i] = Math.max(1, weightedActions[i]);
         }
 
@@ -101,24 +119,44 @@ public class Bot extends Player{
         for(int value : weightedActions)
             sum += value;
 
+//        for(int i = 0; i < weightedActions.length; i++)
+//            System.out.println(Actions.values()[i] + ": " + weightedActions[i]);
+
         int finalChoice = (int) (Math.random() * sum);
         int index = 0;
         for(int value : weightedActions) {
             finalChoice -= value;
-            if (finalChoice <= 0)
-                return Actions.values()[index];
+            if (finalChoice <= 0) {
+                lastActionSucceeded = false;
+                return lastAction = Actions.values()[index];
+            }
             index++;
         }
-        throw new IllegalStateException("Weighted random action generation failed");
-
+        throw new IllegalStateException("invalid action " + finalChoice);
     }
 
-    public int actionToArraySpot(Actions action) {
-        for(int i = 0; i < Actions.values().length; i++) {
-            if (Actions.values()[i] == action)
-                return i;
+    public int calculateFearOfBlockingPenalty(Cards card, int penalty) {
+        return ((3 - copiesOfCardSeen(card)) + howManyTimesHasCardBeenPlayedRecently(card) * 5) * penalty;
+    }
+
+    public int howManyTimesHasCardBeenPlayedRecently(Cards card) {
+        int output = 0;
+        Player[] players = Main.getPlayers();
+        for(Player player : players) {
+            if (player.getLastPlayedCard() == card && player != this && Main.isPlayerAlive(player))
+                output++;
         }
-        throw new IllegalStateException("Didn't find Action");
+        return output;
+    }
+
+    public void successfulUseOfAction(Actions action) {
+        lastActionSucceeded = true;
+        System.out.println(this + " used " + action);
+    }
+
+    public void successfulUseOfAction(Actions action, Player target) {
+        lastActionSucceeded = true;
+        System.out.println(this + " used " + action + " on " + target);
     }
 
     public Player pickTarget(Actions action) {
@@ -146,7 +184,7 @@ public class Bot extends Player{
                 return players[index];
             index++;
         }
-        throw new IllegalStateException("Weighted random action generation failed");
+        throw new IllegalStateException("invalid player");
     }
 
     public Card pickExchange() {
@@ -192,7 +230,7 @@ public class Bot extends Player{
     }
 
     public Cards wantsToBlock(Player player, Actions action, Player target) {
-        if(target != this && ((evaluatePlayerThreatLevel(target) > evaluatePlayerThreatLevel(player) || action == Actions.ASSASSINATE) && Math.random() < 0.96)) {
+        if(target != this && ((evaluatePlayerThreatLevel(target) > evaluatePlayerThreatLevel(player) + (int) (Math.random() * 10) || action == Actions.ASSASSINATE) && Math.random() < 0.96)) {
             System.out.println(this + " declines to block.");
             return null;
         }
@@ -226,6 +264,8 @@ public class Bot extends Player{
 
     public void discard() {
         Card[] hand = Main.getCardsInZone(this);
+        if (hand.length == 0)
+            return;
         Card chosenCard = pickWorstCardInHand();
         chosenCard.setZone(Zones.getZone(GlobalZones.DISCARD));
         System.out.println(this + " discards a " + chosenCard + ".");
@@ -244,10 +284,13 @@ public class Bot extends Player{
 
     public int copiesOfCardSeen(Cards card) {
         int output = 0;
-        for(Card card1 : Main.getCardsInZone(this))
-            output++;
+        for(Card card1 : Main.getCardsInZone(this)) {
+            if (card1.getName() == card)
+                output++;
+        }
         for(Card card1 : Main.getCardsInZone(GlobalZones.DISCARD))
-            output++;
+            if (card1.getName() == card)
+                output++;
         return output;
     }
 
@@ -256,7 +299,7 @@ public class Bot extends Player{
         Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
         drawnCard.setZone(Zones.getZone(this));
         System.out.println(this + " draws a card");
-        if(Math.random() < 1/3.0)
+        if(Math.random() < 0.2)
             generateBluffCard();
     }
 
@@ -317,7 +360,7 @@ public class Bot extends Player{
                 return hand[index];
             index++;
         }
-        throw new IllegalStateException("Weighted random action generation failed");
+        throw new IllegalStateException("invalid card" + finalChoice);
     }
 
     /*
