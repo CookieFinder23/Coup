@@ -161,22 +161,15 @@ public class Main {
 
     public static boolean offerBlock(Player player, Actions action, Player target) {
         if(!isPlayerAlive(target)) return false;
-        System.out.println("\nOffering blocks for " + player + "'s " + action + " targeting " + target + ":");
-        for (int i = 1; i < players.length; i++)
-        {
-            Player blocker = players[(i + player.getPositionInTurnOrder()) % players.length];
-            if (!isPlayerAlive(blocker))
-                continue;
-            Cards chosenCard = blocker.wantsToBlock(player, action, target);
+            Cards chosenCard = target.wantsToBlock(player, action, target);
             if (chosenCard != null) {
-                System.out.println(blocker + " blocks " + player + "'s " + action + " with their " + chosenCard);
-                if (player.wantsToChallenge(blocker, chosenCard, target, true)) {
-                    return !resolveChallenge(player, blocker, chosenCard);
+                System.out.println(target + " blocks " + player + "'s " + action + " with their " + chosenCard);
+                if (player.wantsToChallenge(target, chosenCard, target, true)) {
+                    return !resolveChallenge(player, target, chosenCard);
                 } else {
                     return true;
                 }
             }
-        }
         return false;
     }
 
