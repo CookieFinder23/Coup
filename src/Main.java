@@ -13,7 +13,11 @@ public class Main {
         final int minLength = 1;
         final int maxLength = 10;
         players = new Player[1 + numberOfOpponents];
-        players[0] = new User(namePlayer("Name yourself: ", minLength, maxLength), 0);
+        String name = namePlayer("Name yourself: ", minLength, maxLength);
+        if (name.toLowerCase().contains("bot"))
+            players[0] = new Bot(name, 0);
+        else
+            players[0] = new User(name, 0);
         for (int i = 1; i < players.length; i++)
             players[i] = new Bot(namePlayer("Name opponent #" + i + ": ", minLength, maxLength), i);
 
@@ -22,12 +26,10 @@ public class Main {
         int currentTurn = askNumber("Which player should start?", 1, players.length + 1) - 1;
         // SETUP DECK
         cards = new Card[15];
-        for (int i = 0; i < 15; i += 5) {
-            cards[i] = new Card(Cards.DUKE);
-            cards[i+1] = new Card(Cards.ASSASSIN);
-            cards[i+2] = new Card(Cards.AMBASSADOR);
-            cards[i+3] = new Card(Cards.CAPTAIN);
-            cards[i+4] = new Card(Cards.CONTESSA);
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 3; j++) {
+                cards[i * 3 + j] = new Card(Cards.values()[i]);
+            }
         }
 
         // DRAW STARTING CARDS
@@ -44,8 +46,8 @@ public class Main {
                 currentTurn = currentTurn % players.length;
             } while (!isPlayerAlive(players[currentTurn]));
         }
-
-        System.out.println(players[currentTurn] + " wins!");
+        System.out.println(players[currentTurn] + " wins!\n");
+        printGamestate();
     }
 
     public static boolean isGameOver() {

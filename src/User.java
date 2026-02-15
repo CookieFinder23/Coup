@@ -55,35 +55,35 @@ public class User extends Player{
     public boolean wantsToChallenge(Player player, Cards card, Player target, boolean block) {
 
         if (block) {
-            return pickOption("Given that " + player + " is attempting to use " + card
-                    + " to block an action, would you like to challenge their claim of " + card + "?\n1: Yes\n2: No", 2) == 1;
+            return pickOption("1: Yes\n2: No\nGiven that " + player + " is attempting to use " + card
+                    + " to block an action, would you like to challenge their claim of " + card + "?", 2) == 1;
         } else {
-            return pickOption("Given that " + player + " is attempting to use " + card.getAction() + " on " + target
-                    + ", would you like to challenge their claim of " + card + "?\n1: Yes\n2: No", 2) == 1;
+            return pickOption("1: Yes\n2: No\nGiven that " + player + " is attempting to use " + card.getAction() + " on " + target
+                    + ", would you like to challenge their claim of " + card + "?", 2) == 1;
         }
     }
 
     public boolean wantsToChallenge(Player player, Cards card, boolean block) {
         if (block) {
-            return pickOption("Given that " + player + " is attempting to use " + card
-                    + " to block an action, would you like to challenge their claim of " + card + "?\n1: Yes\n2: No", 2) == 1;
+            return pickOption("1: Yes\n2: No\nGiven that " + player + " is attempting to use " + card
+                    + " to block an action, would you like to challenge their claim of " + card + "?", 2) == 1;
         } else {
-            return pickOption("Given that " + player + " is attempting to use " + card.getAction()
-                    + ", would you like to challenge their claim of " + card + "?\n1: Yes\n2: No", 2) == 1;
+            return pickOption("1: Yes\n2: No\nGiven that " + player + " is attempting to use " + card.getAction()
+                    + ", would you like to challenge their claim of " + card + "?", 2) == 1;
         }
     }
 
     public Cards wantsToBlock(Player player, Actions action) {
-        if (pickOption("Given that " + player + " is attempting to use " + action
-                + ", would you like to block their action?\n1: Yes\n2: No", 2) == 2) {
+        if (pickOption("1: Yes\n2: No\nGiven that " + player + " is attempting to use " + action
+                + ", would you like to block their action?", 2) == 2) {
             return null;
         }
         return Cards.DUKE;
     }
 
     public Cards wantsToBlock(Player player, Actions action, Player target) {
-        if (pickOption("Given that " + player + " is attempting to use " + action
-                + " on " + target + ", would you like to block their action?\n1: Yes\n2: No", 2) == 2) {
+        if (pickOption("1: Yes\n2: No\nGiven that " + player + " is attempting to use " + action
+                + " on " + target + ", would you like to block their action?", 2) == 2) {
             return null;
         }
         switch(action) {
@@ -121,7 +121,7 @@ public class User extends Player{
 
     public static int pickOption(String message, int max)
     {
-        System.out.println(message + "\nInput \"0\" to see the gamestate.");
+        System.out.println(message + " (Input \"0\" to see the gamestate.)");
         int output;
         try {
             output = keyboard.nextInt();
@@ -147,14 +147,4 @@ public class User extends Player{
         drawnCard.setZone(Zones.getZone(this));
         System.out.println("You drew a " + drawnCard);
     }
-
-    /*
-    public abstract Card pickExchange();
-    public abstract Player pickTarget();
-    public abstract Actions pickTurnAction();
-    public abstract boolean wantsToChallenge(Player player, Cards card, Player target);
-    public abstract Cards wantsToBlock(Player player, Actions action, Player target);
-    public abstract Card resolveChallenge(Cards card);
-    public abstract void discard();
-     */
 }
