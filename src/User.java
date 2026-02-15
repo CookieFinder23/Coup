@@ -130,7 +130,7 @@ public class User extends Player{
                 return pickOption(message, max);
             }
             if (output < 0 || output > max) {
-                System.out.println("Input must be between 0-" + max);
+                System.out.println("Input must be between 0-" + max + ".");
                 return pickOption(message, max);
             }
             return output;
@@ -145,6 +145,6 @@ public class User extends Player{
         Card[] cardsInDeck = Main.getCardsInZone(GlobalZones.DECK);
         Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
         drawnCard.setZone(Zones.getZone(this));
-        System.out.println("You drew a " + drawnCard);
+        System.out.println("You drew a " + drawnCard + ".");
     }
 }

@@ -148,12 +148,12 @@ public class Bot extends Player{
 
     public void successfulUseOfAction(Actions action) {
         lastActionSucceeded = true;
-        System.out.println(this + " used " + action);
+        System.out.println(this + " used " + action + ".");
     }
 
     public void successfulUseOfAction(Actions action, Player target) {
         lastActionSucceeded = true;
-        System.out.println(this + " used " + action + " on " + target);
+        System.out.println(this + " used " + action + " on " + target + ".");
     }
 
     public Player pickTarget(Actions action) {
@@ -199,7 +199,7 @@ public class Bot extends Player{
                 || (target == this && Math.random() < 0.4)) {
             return true;
         } else {
-            System.out.println(this + " declines to challenge " + player + "'s claim of " + card);
+            System.out.println(this + " declines to challenge " + player + "'s claim of " + card + ".");
             return false;
         }
     }
@@ -212,7 +212,7 @@ public class Bot extends Player{
         || copiesOfCardSeen(card) == 3) {
             return true;
         } else {
-            System.out.println(this + " declines to challenge " + player + "'s claim of " + card);
+            System.out.println(this + " declines to challenge " + player + "'s claim of " + card + ".");
             return false;
         }
     }
@@ -293,7 +293,7 @@ public class Bot extends Player{
         Card[] cardsInDeck = Main.getCardsInZone(GlobalZones.DECK);
         Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
         drawnCard.setZone(Zones.getZone(this));
-        System.out.println(this + " draws a card");
+        System.out.println(this + " draws a card.");
         if(Math.random() < 0.2)
             generateBluffCard();
     }

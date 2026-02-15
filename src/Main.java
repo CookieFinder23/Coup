@@ -111,12 +111,12 @@ public class Main {
                         System.out.println(player + " has 2 cards in their hand and " + player.getCoins() + " coins.");
                 }
                     else
-                    System.out.println(player + " is out of the game");
+                    System.out.println(player + " is out of the game.");
             } else {
                 System.out.println("Your hand is {" + listCardsInZone(Zones.getZone(player)) + "} and you have " + player.getCoins() + " coins.");
             }
         }
-        System.out.println("This discard pile is {" + listCardsInZone(Zones.getZone(GlobalZones.DISCARD)) + "}");
+        System.out.println("This discard pile is: {" + listCardsInZone(Zones.getZone(GlobalZones.DISCARD)) + "}");
     }
 
     public static String listCardsInZone(int zone) {
@@ -165,7 +165,7 @@ public class Main {
         if(!isPlayerAlive(target)) return false;
             Cards chosenCard = target.wantsToBlock(player, action, target);
             if (chosenCard != null) {
-                System.out.println(target + " blocks " + player + "'s " + action + " with their " + chosenCard);
+                System.out.println(target + " blocks " + player + "'s " + action + " with their " + chosenCard + ".");
                 if (player.wantsToChallenge(target, chosenCard, target, true)) {
                     return !resolveChallenge(player, target, chosenCard);
                 } else {
@@ -185,7 +185,7 @@ public class Main {
             }
             Cards chosenCard = blocker.wantsToBlock(player, action);
             if (chosenCard != null) {
-                System.out.println(blocker + " blocks " + player + "'s " + action + " with their " + chosenCard);
+                System.out.println(blocker + " blocks " + player + "'s " + action + " with their " + chosenCard + ".");
                 if (player.wantsToChallenge(blocker, chosenCard, true)) {
                     return !resolveChallenge(player, blocker, chosenCard);
                 } else {
