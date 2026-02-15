@@ -13,12 +13,11 @@ public class Bot extends Player{
     }
 
     public void generateBluffCard() {
+        bluff = null; // Challenge: Why does the code have an extremely low chance of handing indefinitely without this line?
         int indexOfCard;
-        int maxIterations = 100; // challenge: guess why the code has a miniscule chance to indefinitely hang without this
         do {
             indexOfCard = (int) (Math.random() * 5);
-            maxIterations--;
-        } while(handContainsCard(Cards.values()[indexOfCard]) && maxIterations > 0);
+        } while(handContainsCard(Cards.values()[indexOfCard]));
         bluff = Cards.values()[indexOfCard];
     }
 
@@ -219,7 +218,7 @@ public class Bot extends Player{
     }
 
     public Cards wantsToBlock(Player player, Actions action) {
-        if (handContainsCard(Cards.DUKE)) {
+        if (handContainsCard(Cards.DUKE) || (lastAction == Actions.TAX && lastActionSucceeded)) {
             return Cards.DUKE;
         } else {
             System.out.println(this + " declines to block.");
@@ -228,16 +227,14 @@ public class Bot extends Player{
     }
 
     public Cards wantsToBlock(Player player, Actions action, Player target) {
-        if(target != this && ((evaluatePlayerThreatLevel(target) > evaluatePlayerThreatLevel(player) + (int) (Math.random() * 10) || action == Actions.ASSASSINATE) && Math.random() < 0.96)) {
-            System.out.println(this + " declines to block.");
-            return null;
-        }
         if (action == Actions.ASSASSINATE && ((handContainsCard(Cards.CONTESSA)) || Main.getCardsInZone(this).length == 1))
             return Cards.CONTESSA;
-        if ((action == Actions.STEAL && handContainsCard(Cards.CAPTAIN)) && !(handContainsCard(Cards.AMBASSADOR) && (Math.random() < 0.5 || bluff == Cards.CAPTAIN)))
-                return Cards.CAPTAIN;
+        if ((action == Actions.STEAL && (handContainsCard(Cards.CAPTAIN)
+                || (lastAction == Actions.STEAL && lastActionSucceeded)))
+                && !(handContainsCard(Cards.AMBASSADOR) && (Math.random() < 0.5 || bluff == Cards.CAPTAIN)))
+            return Cards.CAPTAIN;
         if (action == Actions.STEAL && handContainsCard(Cards.AMBASSADOR))
-                return Cards.AMBASSADOR;
+            return Cards.AMBASSADOR;
         System.out.println(this + " declines to block.");
         return null;
     }
@@ -327,19 +324,19 @@ public class Bot extends Player{
             } else {
                 switch (hand[i].getName()) {
                     case Cards.DUKE:
-                        weightedCards[i] = 3;
+                        weightedCards[i] = 2;
                         break;
                     case Cards.ASSASSIN:
-                        weightedCards[i] = 4;
+                        weightedCards[i] = 3;
                         break;
                     case Cards.AMBASSADOR:
-                        weightedCards[i] = 1;
+                        weightedCards[i] = 4;
                         break;
                     case Cards.CAPTAIN:
                         weightedCards[i] = 5;
                         break;
                     case Cards.CONTESSA:
-                        weightedCards[i] = 2;
+                        weightedCards[i] = 1;
                         break;
                 }
             }
@@ -360,14 +357,4 @@ public class Bot extends Player{
         }
         throw new IllegalStateException("invalid card" + finalChoice);
     }
-
-    /*
-    public abstract Card pickExchange();
-    public abstract Player pickTarget();
-    public abstract Actions pickTurnAction();
-    public abstract boolean wantsToChallenge(Player player, Cards card, Player target);
-    public abstract Cards wantsToBlock(Player player, Actions action, Player target);
-    public abstract Card resolveChallenge(Cards card);
-    public abstract void discard();
-     */
 }
