@@ -78,6 +78,7 @@ public class User extends Player{
                 + ", would you like to block their action?", 2) == 2) {
             return null;
         }
+        setLastPlayedCard(Cards.DUKE);
         return Cards.DUKE;
     }
 
@@ -87,14 +88,19 @@ public class User extends Player{
             return null;
         }
         switch(action) {
-            case Actions.FOREIGN_AID: return Cards.DUKE;
-            case Actions.ASSASSINATE: return Cards.CONTESSA;
+            case Actions.ASSASSINATE:
+                setLastPlayedCard(Cards.CONTESSA);
+                return Cards.CONTESSA;
             case Actions.STEAL:
-                if (pickOption("Which card do you want to claim to block Steal with?\n1: Captain\n2: Ambassador", 2) == 1)
+                if (pickOption("Which card do you want to claim to block Steal with?\n1: Captain\n2: Ambassador", 2) == 1) {
+                    setLastPlayedCard(Cards.CAPTAIN);
                     return Cards.CAPTAIN;
-                else
+                }
+                else {
+                    setLastPlayedCard(Cards.AMBASSADOR);
                     return Cards.AMBASSADOR;
-            default: throw new IllegalStateException("Unexpected value: " + this);
+                }
+                default: throw new IllegalStateException("Unexpected value: " + this);
         }
     }
 
@@ -146,5 +152,13 @@ public class User extends Player{
         Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
         drawnCard.setZone(Zones.getZone(this));
         System.out.println("You drew a " + drawnCard + ".");
+        for(Player player : Main.getPlayers()) {
+            if(player != this)
+                player.opponentDrewCard();
+        }
+    }
+
+    public void opponentDrewCard() {
+        ;
     }
 }

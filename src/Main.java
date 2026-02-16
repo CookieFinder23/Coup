@@ -9,6 +9,14 @@ public class Main {
         keyboard = new Scanner(System.in);
         int numberOfOpponents = askNumber("How many opponents (1-5)?", 1, 5);
 
+        // SETUP DECK
+        cards = new Card[15];
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 3; j++) {
+                cards[i * 3 + j] = new Card(Cards.values()[i]);
+            }
+        }
+
         // SETUP PLAYERS
         final int minLength = 1;
         final int maxLength = 10;
@@ -24,13 +32,6 @@ public class Main {
         for (int i = 0; i < players.length; i++)
             System.out.println((i + 1) + ": " + players[i]);
         int currentTurn = askNumber("Which player should start?", 1, players.length + 1) - 1;
-        // SETUP DECK
-        cards = new Card[15];
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 3; j++) {
-                cards[i * 3 + j] = new Card(Cards.values()[i]);
-            }
-        }
 
         // DRAW STARTING CARDS
         for (Player player : players) {
@@ -57,6 +58,10 @@ public class Main {
                 alivePlayers++;
         }
         return alivePlayers == 1;
+    }
+
+    public static Card[] getCards() {
+        return cards;
     }
 
     public static String namePlayer(String message, int minLength, int maxLength) {

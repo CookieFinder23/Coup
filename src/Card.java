@@ -22,8 +22,4 @@ public class Card {
     public String toString() {
         return name.toString();
     }
-
-
-
-
 }

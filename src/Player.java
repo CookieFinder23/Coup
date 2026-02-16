@@ -81,10 +81,12 @@ public abstract class Player {
     }
 
     public void attemptingToUseAction(Actions action, Player target) {
+        lastPlayedCard = action.getCard();
         System.out.println(this + " is attempting to use " + action + " on " + target + ".");
     }
 
     public void successfulUseOfAction(Actions action, Player target) {
+        lastPlayedCard = action.getCard();
         System.out.println(this + " used " + action + " on " + target + ".");
     }
 
@@ -168,4 +170,5 @@ public abstract class Player {
     public abstract Cards wantsToBlock(Player player, Actions action);
     public abstract Card resolveChallenge(Cards card);
     public abstract void discard();
+    public abstract void opponentDrewCard();
 }

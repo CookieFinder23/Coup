@@ -6,10 +6,12 @@ public class Bot extends Player{
     private Cards bluff;
     private Actions lastAction;
     private boolean lastActionSucceeded;
+    private boolean[] cardKnownToBeInDeck;
     public Bot(String name, int positionInTurnOrder) {
         super(name, positionInTurnOrder);
         lastAction = Actions.INCOME;
         lastActionSucceeded = true;
+        cardKnownToBeInDeck = new boolean[15];
     }
 
     public void generateBluffCard() {
@@ -36,8 +38,7 @@ public class Bot extends Player{
         4.  Actions which require bluffing a card with three copies in discard are set to zero and cannot be changed
         5.  Add each Action's net coin value (Ambassador = 2) (Add lose influence bonus if applicable)
         6.  If you have the card required to use the action, add honesty bonus
-        7.  Subtract fear of block penalty for each copy of a blocking card not seen. If a player has claimed a blocking card, then subtract
-            five times the fear of blocking penalty instead.
+        7.  Subtract fear of block penalty for each copy of a blocking card not seen multiplied by the amount of times the card has been claimed
         8.  Subtract better option penalty for strictly better abilities of cards you have
         9.  If the bot tried and failed to do an action last turn, subtract the repetition penalty to that action
         10. Multiply all action weightages by the consistency multiplier value
@@ -66,8 +67,11 @@ public class Bot extends Player{
             weightedActions[i]++;
             switch (Actions.values()[i]) {
                 case Actions.INCOME:
+                    if (copiesOfCardSeen(Cards.DUKE) == 3)
+                        break;
                     weightedActions[i]++;
-                    if (handContainsCard(Cards.DUKE)) weightedActions[i] -= betterOptionPenalty;
+                    if (handContainsCard(Cards.DUKE))
+                        weightedActions[i] -= betterOptionPenalty;
                     break;
                 case Actions.FOREIGN_AID:
                     weightedActions[i] += 2;
@@ -133,7 +137,7 @@ public class Bot extends Player{
     }
 
     public int calculateFearOfBlockingPenalty(Cards card, int penalty) {
-        return ((3 - copiesOfCardSeen(card)) + howManyTimesHasCardBeenPlayedRecently(card) * 5) * penalty;
+        return ((3 - copiesOfCardSeen(card)) * howManyTimesHasCardBeenPlayedRecently(card)) * penalty;
     }
 
     public int howManyTimesHasCardBeenPlayedRecently(Cards card) {
@@ -163,8 +167,10 @@ public class Bot extends Player{
         for(int i = 0; i < players.length; i++) {
             if (players[i] == this || !Main.isPlayerAlive(players[i]))
                 continue;
-            if (action == Actions.STEAL && players[i].getCoins() > 1)
-                weightedPlayers[i] += 5;
+            if (action == Actions.STEAL && players[i].getCoins() > 1 && players[i].getLastPlayedCard() != Cards.AMBASSADOR && players[i].getLastPlayedCard() != Cards.CAPTAIN)
+                weightedPlayers[i] *= 3;
+            if(action == Actions.ASSASSINATE && players[i].getLastPlayedCard() != Cards.CONTESSA)
+                weightedPlayers[i] *= 3;
             weightedPlayers[i] += evaluatePlayerThreatLevel(players[i]);
         }
 
@@ -185,9 +191,19 @@ public class Bot extends Player{
     }
 
     public Card pickExchange() {
-        Card[] hand = Main.getCardsInZone(this);
         System.out.println(this + " shuffles a card from their hand into the deck.");
-        return pickWorstCardInHand();
+        Card chosenCard = pickWorstCardInHand();
+        changeCardKnownToBeInDeck(chosenCard, true);
+        return chosenCard;
+    }
+
+    public void changeCardKnownToBeInDeck(Card card, boolean bool) {
+        for(int i = 0; i < Main.getCards().length; i++) {
+            if (Main.getCards()[i] == card) {
+                cardKnownToBeInDeck[i] = bool;
+                return;
+            }
+        }
     }
 
     public boolean wantsToChallenge(Player player, Cards card, Player target, boolean block) {
@@ -219,6 +235,7 @@ public class Bot extends Player{
 
     public Cards wantsToBlock(Player player, Actions action) {
         if (handContainsCard(Cards.DUKE) || (lastAction == Actions.TAX && lastActionSucceeded)) {
+            setLastPlayedCard(Cards.DUKE);
             return Cards.DUKE;
         } else {
             System.out.println(this + " declines to block.");
@@ -227,14 +244,20 @@ public class Bot extends Player{
     }
 
     public Cards wantsToBlock(Player player, Actions action, Player target) {
-        if (action == Actions.ASSASSINATE && ((handContainsCard(Cards.CONTESSA)) || Main.getCardsInZone(this).length == 1))
+        if (action == Actions.ASSASSINATE && ((handContainsCard(Cards.CONTESSA)) || Main.getCardsInZone(this).length == 1)) {
+            setLastPlayedCard(Cards.CONTESSA);
             return Cards.CONTESSA;
+        }
         if ((action == Actions.STEAL && (handContainsCard(Cards.CAPTAIN)
                 || (lastAction == Actions.STEAL && lastActionSucceeded)))
-                && !(handContainsCard(Cards.AMBASSADOR) && (Math.random() < 0.5 || bluff == Cards.CAPTAIN)))
+                && !(handContainsCard(Cards.AMBASSADOR) && (Math.random() < 0.5 || bluff == Cards.CAPTAIN))) {
+            setLastPlayedCard(Cards.CAPTAIN);
             return Cards.CAPTAIN;
-        if (action == Actions.STEAL && handContainsCard(Cards.AMBASSADOR))
+        }
+        if (action == Actions.STEAL && handContainsCard(Cards.AMBASSADOR)) {
+            setLastPlayedCard(Cards.AMBASSADOR);
             return Cards.AMBASSADOR;
+    }
         System.out.println(this + " declines to block.");
         return null;
     }
@@ -283,9 +306,14 @@ public class Bot extends Player{
             if (card1.getName() == card)
                 output++;
         }
-        for(Card card1 : Main.getCardsInZone(GlobalZones.DISCARD))
+        for(Card card1 : Main.getCardsInZone(GlobalZones.DISCARD)) {
             if (card1.getName() == card)
                 output++;
+        }
+        for(int i = 0; i < Main.getCards().length; i++) {
+            if(Main.getCards()[i].getName() == card && cardKnownToBeInDeck[i])
+                output++;
+        }
         return output;
     }
 
@@ -294,8 +322,17 @@ public class Bot extends Player{
         Card drawnCard = cardsInDeck[(int) (Math.random() * cardsInDeck.length)];
         drawnCard.setZone(Zones.getZone(this));
         System.out.println(this + " draws a card.");
+        for(Player player : Main.getPlayers()) {
+            if (player != this)
+                opponentDrewCard();
+        }
         if(Math.random() < 0.2)
             generateBluffCard();
+    }
+
+    public void opponentDrewCard() {
+        for(int i = 0; i < cardKnownToBeInDeck.length; i++)
+            cardKnownToBeInDeck[i] = false;
     }
 
     public Card pickWorstCardInHand() {
