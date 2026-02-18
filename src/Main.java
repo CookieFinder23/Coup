@@ -66,7 +66,7 @@ public class Main {
 
     public static String namePlayer(String message, int minLength, int maxLength) {
         System.out.print(message);
-        String output = keyboard.next();
+        String output = keyboard.nextLine();
         if (output.length() < minLength || output.length() > maxLength) {
             System.out.println("Name must be " + minLength + "-" + maxLength + " characters.");
             return namePlayer(message, minLength, maxLength);
