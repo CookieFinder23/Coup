@@ -92,7 +92,7 @@ public class User extends Player{
                 setLastPlayedCard(Cards.CONTESSA);
                 return Cards.CONTESSA;
             case Actions.STEAL:
-                if (pickOption("Which card do you want to claim to block Steal with?\n1: Captain\n2: Ambassador", 2) == 1) {
+                if (pickOption("1: Captain\n2: Ambassador\nWhich card do you want to claim to block Steal with?", 2) == 1) {
                     setLastPlayedCard(Cards.CAPTAIN);
                     return Cards.CAPTAIN;
                 }
