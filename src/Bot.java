@@ -415,8 +415,6 @@ public class Bot extends Player{
         if(Main.getCardsInZone(this).length == 2 || Main.getCardsInZone(opponent).length == 2)
             return Solved.UNKNOWN;
 
-        Cards myCard = Main.getCardsInZone(this)[0].getName();
-
         // IF THERE ARE ANY OTHER PLAYERS, THIS DOESN'T APPLY
         for(Player player : Main.getPlayers()) {
             if(Main.isPlayerAlive(player) && player != this && player != opponent)
@@ -426,6 +424,7 @@ public class Bot extends Player{
             // IF I WILL DIE AFTERWARDS, THEN DO
             return opponent.getCoins() > 6 ? Solved.TRUE : Solved.UNKNOWN;
         } else {
+            Cards myCard = Main.getCardsInZone(this)[0].getName();
             // IF I CAN KILL AFTERWARDS, THEN DON'T
             if (getCoins() > 6 && card != Cards.ASSASSIN && (card != Cards.CAPTAIN || getCoins() < 9)
                     || (getCoins() > 2 && myCard == Cards.ASSASSIN && (card != Cards.CAPTAIN || getCoins() < 5)))
