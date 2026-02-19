@@ -362,16 +362,16 @@ public class Bot extends Player{
             if (Main.getPlayers().length > 3) {
                 switch (hand[i].getName()) {
                     case Cards.DUKE:
-                        weightedCards[i] = 5;
-                        break;
-                    case Cards.ASSASSIN:
-                        weightedCards[i] = 4;
-                        break;
-                    case Cards.AMBASSADOR:
                         weightedCards[i] = 1;
                         break;
-                    case Cards.CAPTAIN:
+                    case Cards.ASSASSIN:
                         weightedCards[i] = 2;
+                        break;
+                    case Cards.AMBASSADOR:
+                        weightedCards[i] = 5;
+                        break;
+                    case Cards.CAPTAIN:
+                        weightedCards[i] = 4;
                         break;
                     case Cards.CONTESSA:
                         weightedCards[i] = 3;
@@ -380,19 +380,19 @@ public class Bot extends Player{
             } else {
                 switch (hand[i].getName()) {
                     case Cards.DUKE:
-                        weightedCards[i] = 2;
+                        weightedCards[i] = 4;
                         break;
                     case Cards.ASSASSIN:
                         weightedCards[i] = 3;
                         break;
                     case Cards.AMBASSADOR:
-                        weightedCards[i] = 4;
+                        weightedCards[i] = 2;
                         break;
                     case Cards.CAPTAIN:
-                        weightedCards[i] = 5;
+                        weightedCards[i] = 1;
                         break;
                     case Cards.CONTESSA:
-                        weightedCards[i] = 1;
+                        weightedCards[i] = 5;
                         break;
                 }
             }
