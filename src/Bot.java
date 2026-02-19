@@ -33,7 +33,7 @@ public class Bot extends Player{
         3.  If bluffing, subtract fear of challenge penalty for each copy of the card in discard, and for each time the card was played by an
             alive player last turn
         4.  Actions which require bluffing a card with three copies in discard are set to zero and cannot be changed
-        5.  Add each Action's net coin value (Ambassador = 2) (Add lose influence bonus if applicable)
+        5.  Add each Action's net coin value (Ambassador = 2) (Add lose influence bonus if applicable) (Add 3 or less player bonus for captain)
         6.  If you have the card required to use the action, add honesty bonus
         7.  Subtract fear of block penalty for each copy of a blocking card not seen multiplied by the amount of times the card has been claimed
         8.  Subtract better option penalty for strictly better abilities of cards you have
@@ -52,6 +52,7 @@ public class Bot extends Player{
         final int betterOptionPenalty = 3;
         final int repetitionPenalty = 5;
         final int consistencyMultiplier = 2;
+        final int lowPlayerBonus = 4;
         for(int i = 0; i < weightedActions.length; i++) {
             if (Actions.values()[i].getCard() != null) {
                 Cards bluffingCard = Actions.values()[i].getCard();
@@ -94,7 +95,7 @@ public class Bot extends Player{
                     }
                     weightedActions[i] += loseInfluenceBonus + 4;
                     if (handContainsCard(Cards.ASSASSIN)) weightedActions[i] += honestyBonus;
-                    weightedActions[i] -=  calculateFearOfBlockingPenalty(Cards.CONTESSA, fearOfBlockPenalty);
+                    weightedActions[i] -=  calculateFearOfBlockingPenalty(Cards.CONTESSA, fearOfBlockPenalty) * 3;
                     break;
                 case Actions.EXCHANGE:
                     weightedActions[i] += 2;
@@ -105,6 +106,13 @@ public class Bot extends Player{
                     if (handContainsCard(Cards.CAPTAIN)) weightedActions[i] += honestyBonus;
                     weightedActions[i] -= calculateFearOfBlockingPenalty(Cards.CAPTAIN, fearOfBlockPenalty);
                     weightedActions[i] -= calculateFearOfBlockingPenalty(Cards.AMBASSADOR, fearOfBlockPenalty);
+                    int playerCount = 0;
+                    for(Player player : Main.getPlayers()) {
+                        if (Main.isPlayerAlive(player))
+                            playerCount++;
+                    }
+                    if(playerCount < 3)
+                        weightedActions[i] += (4 - playerCount) * lowPlayerBonus;
                     break;
             }
             if(Actions.values()[i] == lastAction && !lastActionSucceeded)
