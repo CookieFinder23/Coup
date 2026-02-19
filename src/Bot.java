@@ -95,7 +95,7 @@ public class Bot extends Player{
                     }
                     weightedActions[i] += loseInfluenceBonus + 4;
                     if (handContainsCard(Cards.ASSASSIN)) weightedActions[i] += honestyBonus;
-                    weightedActions[i] -=  calculateFearOfBlockingPenalty(Cards.CONTESSA, fearOfBlockPenalty) * 3;
+                    weightedActions[i] -=  calculateFearOfBlockingPenalty(Cards.CONTESSA, fearOfBlockPenalty) * 2;
                     break;
                 case Actions.EXCHANGE:
                     weightedActions[i] += 2;
