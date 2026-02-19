@@ -1,6 +1,3 @@
-import javax.accessibility.AccessibleIcon;
-import javax.annotation.processing.SupportedSourceVersion;
-
 public class Bot extends Player{
 
     private Cards bluff;
@@ -207,11 +204,18 @@ public class Bot extends Player{
     }
 
     public boolean wantsToChallenge(Player player, Cards card, Player target, boolean block) {
+        switch(shouldIChallengeWithSolve(player, card, block)) {
+            case Solved.TRUE:
+                return true;
+            case Solved.FALSE:
+                return false;
+            default:
+                break;
+        }
         if ((((Math.random() < 0.1 && copiesOfCardSeen(card) == 0)
                 || (Math.random() < 0.2 && copiesOfCardSeen(card) == 1)
                 || (Math.random() < 0.3 && copiesOfCardSeen(card) == 2))
                 && Math.random() * Main.getPlayers().length < 3)
-                || copiesOfCardSeen(card) == 3
                 || (target == this && Math.random() < 0.4)) {
             return true;
         } else {
@@ -221,11 +225,18 @@ public class Bot extends Player{
     }
 
     public boolean wantsToChallenge(Player player, Cards card, boolean block) {
+        switch(shouldIChallengeWithSolve(player, card, block)) {
+            case Solved.TRUE:
+                return true;
+            case Solved.FALSE:
+                return false;
+            default:
+                break;
+        }
         if ((((Math.random() < 0.1 && copiesOfCardSeen(card) == 0)
         || (Math.random() < 0.2 && copiesOfCardSeen(card) == 1)
         || (Math.random() < 0.3 && copiesOfCardSeen(card) == 2))
-        && Math.random() * Main.getPlayers().length < 3)
-        || copiesOfCardSeen(card) == 3) {
+        && Math.random() * Main.getPlayers().length < 3)) {
             return true;
         } else {
             System.out.println(this + " declines to challenge " + player + "'s claim of " + card + ".");
@@ -393,5 +404,51 @@ public class Bot extends Player{
             index++;
         }
         throw new IllegalStateException("invalid card" + finalChoice);
+    }
+
+    public Solved shouldIChallengeWithSolve(Player opponent, Cards card, boolean block) {
+        // IF THERE ARE THREE CARDS SEEN, THEN CHALLENGE
+        if(copiesOfCardSeen(card) == 3)
+            return Solved.TRUE;
+
+        // IF A PLAYER HAS 2 CARDS, THIS DOESN'T APPLY
+        if(Main.getCardsInZone(this).length == 2 || Main.getCardsInZone(opponent).length == 2)
+            return Solved.UNKNOWN;
+
+        Cards myCard = Main.getCardsInZone(this)[0].getName();
+
+        // IF THERE ARE ANY OTHER PLAYERS, THIS DOESN'T APPLY
+        for(Player player : Main.getPlayers()) {
+            if(Main.isPlayerAlive(player) && player != this && player != opponent)
+                return Solved.UNKNOWN;
+        }
+        if(block) {
+            // IF I WILL DIE AFTERWARDS, THEN DO
+            return opponent.getCoins() > 6 ? Solved.TRUE : Solved.UNKNOWN;
+        } else {
+            // IF I CAN KILL AFTERWARDS, THEN DON'T
+            if (getCoins() > 6 && card != Cards.ASSASSIN && (card != Cards.CAPTAIN || getCoins() < 9)
+                    || (getCoins() > 2 && myCard == Cards.ASSASSIN && (card != Cards.CAPTAIN || getCoins() < 5)))
+                return Solved.FALSE;
+
+            switch (card) {
+                case Cards.DUKE:
+                    if (myCard == Cards.CAPTAIN)
+                        return opponent.getCoins() + 1 > 6 ? Solved.TRUE : Solved.FALSE;
+                    else
+                        return opponent.getCoins() + 3 > 6 ? Solved.TRUE : Solved.FALSE;
+                case Cards.ASSASSIN:
+                    return myCard == Cards.CONTESSA ? Solved.FALSE : Solved.TRUE;
+                case Cards.CAPTAIN:
+                    if (myCard == Cards.CAPTAIN || myCard == Cards.AMBASSADOR)
+                        return Solved.FALSE;
+                    else
+                        return myCard == Cards.DUKE && (opponent.getCoins() < getCoins() - 4) ? Solved.TRUE : Solved.FALSE;
+                default:
+                    return Solved.FALSE;
+            }
+        }
+
+
     }
 }
