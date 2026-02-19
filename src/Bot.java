@@ -106,13 +106,8 @@ public class Bot extends Player{
                     if (handContainsCard(Cards.CAPTAIN)) weightedActions[i] += honestyBonus;
                     weightedActions[i] -= calculateFearOfBlockingPenalty(Cards.CAPTAIN, fearOfBlockPenalty);
                     weightedActions[i] -= calculateFearOfBlockingPenalty(Cards.AMBASSADOR, fearOfBlockPenalty);
-                    int playerCount = 0;
-                    for(Player player : Main.getPlayers()) {
-                        if (Main.isPlayerAlive(player))
-                            playerCount++;
-                    }
-                    if(playerCount < 3)
-                        weightedActions[i] += (4 - playerCount) * lowPlayerBonus;
+                    if(playerCount() < 3)
+                        weightedActions[i] += (4 - playerCount()) * lowPlayerBonus;
                     break;
             }
             if(Actions.values()[i] == lastAction && !lastActionSucceeded)
@@ -139,6 +134,15 @@ public class Bot extends Player{
             index++;
         }
         throw new IllegalStateException("invalid action " + finalChoice);
+    }
+
+    public int playerCount() {
+        int playerCount = 0;
+        for(Player player : Main.getPlayers()) {
+            if (Main.isPlayerAlive(player))
+                playerCount++;
+        }
+        return playerCount;
     }
 
     public int calculateFearOfBlockingPenalty(Cards card, int penalty) {
@@ -359,7 +363,7 @@ public class Bot extends Player{
         int[] weightedCards = new int[hand.length];
 
         for (int i = 0; i < hand.length; i++) {
-            if (Main.getPlayers().length > 3) {
+            if (playerCount() > 3) {
                 switch (hand[i].getName()) {
                     case Cards.DUKE:
                         weightedCards[i] = 1;
@@ -380,19 +384,19 @@ public class Bot extends Player{
             } else {
                 switch (hand[i].getName()) {
                     case Cards.DUKE:
-                        weightedCards[i] = 4;
-                        break;
-                    case Cards.ASSASSIN:
                         weightedCards[i] = 3;
                         break;
-                    case Cards.AMBASSADOR:
+                    case Cards.ASSASSIN:
                         weightedCards[i] = 2;
+                        break;
+                    case Cards.AMBASSADOR:
+                        weightedCards[i] = 5;
                         break;
                     case Cards.CAPTAIN:
                         weightedCards[i] = 1;
                         break;
                     case Cards.CONTESSA:
-                        weightedCards[i] = 5;
+                        weightedCards[i] = 4;
                         break;
                 }
             }
